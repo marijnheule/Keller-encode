@@ -76,9 +76,9 @@ void sym_break() {
     for (i = 2; i < N; i++) units[nunit++] = convert(1, i, 0);
     units[nunit++] = convert(3, 0, 0);
     units[nunit++] = convert(3, 1, 1);
-    if (N >= 2) units[nunit++] = convert(3, 2, 1);
-    if (N >= 3) units[nunit++] = convert(3, 3, 1);
-    if (N >= 4) units[nunit++] = convert(3, 4, 1);
+    if (N > 2) units[nunit++] = convert(3, N-1, 1);
+    if (N > 3) units[nunit++] = convert(3, N-2, 1);
+    if (N > 4) units[nunit++] = convert(3, N-3, 1);
 }
 
 int main (int argc, char** argv) {
