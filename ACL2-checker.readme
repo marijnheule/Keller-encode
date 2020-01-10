@@ -1,0 +1,26 @@
+#obtain SBCL
+download the latest binary of SBCL from http://www.sbcl.org/platform-table.html (Probably AMD64, also for Intel)
+bunzip2 the file and untar it, and rename the resulting directory to ~/sbcl
+create the file ~/sbcl/sbcl containing the following:
+
+  #!/bin/sh
+  ~/sbcl/src/runtime/sbcl --core ~/sbcl/output/sbcl.core --dynamic-space-size 5000 "$@"
+
+make it executable: chmod +x ~/sbcl/sbcl
+
+# install the essential parts of ACL2 and the checker:
+git clone https://github.com/acl2/acl2.git
+cd ~/acl2
+export SBCL_HOME=~/sbcl/
+make LISP=~/sbcl/sbcl
+~/acl2/books/build/cert.pl --acl2 ~/acl2/saved_acl2 ~/acl2/books/projects/sat/lrat/cube/*.lisp
+
+# create the executable in ACL2 as follows:
+cd ~/acl2/books/projects/sat/lrat/cube/
+~/acl2/saved_acl2
+  (include-book "run")
+  :q
+  (save-exec "cube-check" "Executable including run.lisp")
+
+# test if it works
+~/acl2/books/projects/sat/lrat/cube/run.sh cnf/R_4_4_18.cnf proof/R_4_4_18.clrat cnf/copy
