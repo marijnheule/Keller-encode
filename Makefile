@@ -10,4 +10,4 @@ tautology: tools/tautology.c
 	gcc -O2 -Wall tools/tautology.c -otools/tautology
 
 clean:
-	rm -f Keller-encode
+	rm -f Keller-encode drat-trim/drat-trim tools/tautology
