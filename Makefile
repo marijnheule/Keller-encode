@@ -28,3 +28,6 @@ tools/ppr2drat: tools/ppr2drat.c
 
 clean:
 	rm -f Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
+
+depclean: clean
+	rm -rf ${CMSATBUILD} bliss-0.73*
