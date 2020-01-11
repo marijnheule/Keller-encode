@@ -1,4 +1,4 @@
-all: encode drattrim tautology pycryptominisat
+all: encode drattrim tautology pycryptominisat bliss-0.73
 
 CMSATBUILD=cryptominisat-build
 
@@ -14,6 +14,11 @@ tautology: tools/tautology.c
 pycryptominisat:
 	mkdir -p ${CMSATBUILD}
 	cd ${CMSATBUILD} && cmake ${CMAKEARGS} ../cryptominisat && make python_interface
+
+bliss-0.73:
+	wget http://www.tcs.hut.fi/Software/bliss/bliss-0.73.zip
+	unzip bliss-0.73.zip
+	cd bliss-0.73 && make lib
 
 clean:
 	rm -f Keller-encode drat-trim/drat-trim tools/tautology
