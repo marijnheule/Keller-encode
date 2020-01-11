@@ -1,17 +1,17 @@
-all: encode drattrim tautology pycryptominisat bliss-0.73 tools/pprsearch/pprsearch
+all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch
 
 CMSATBUILD=cryptominisat-build
 
-encode: Keller-encode.c
+Keller-encode: Keller-encode.c
 	gcc -O2 -Wall Keller-encode.c -oKeller-encode
 
-drattrim: drat-trim/drat-trim.c
+drat-trim/drat-trim: drat-trim/drat-trim.c
 	gcc -O2 -Wall drat-trim/drat-trim.c -odrat-trim/drat-trim
 
-tautology: tools/tautology.c
+tools/tautology: tools/tautology.c
 	gcc -O2 -Wall tools/tautology.c -otools/tautology
 
-pycryptominisat:
+cryptominisat-build/pycryptosat:
 	mkdir -p ${CMSATBUILD}
 	cd ${CMSATBUILD} && cmake ${CMAKEARGS} ../cryptominisat && make python_interface
 
@@ -20,7 +20,7 @@ bliss-0.73:
 	unzip bliss-0.73.zip
 	cd bliss-0.73 && make lib
 
-tools/pprsearch/pprsearch: bliss-0.73 pycryptominisat
+tools/pprsearch/pprsearch: bliss-0.73 cryptominisat-build/pycryptosat
 	cd tools/pprsearch && g++ -o pprsearch -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../${CMSATBUILD}/cmsat5-src/cryptominisat5 -I ../../bliss-0.73 -lboost_regex
 
 clean:
