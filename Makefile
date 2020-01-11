@@ -1,6 +1,6 @@
-all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
-
 CMSATBUILD=cryptominisat-build
+
+all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
 
 Keller-encode: Keller-encode.c
 	gcc -O2 -Wall Keller-encode.c -oKeller-encode
