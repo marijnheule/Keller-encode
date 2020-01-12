@@ -1,4 +1,4 @@
-CMSATBUILD=cryptominisat-build
+CMSATBUILD:=cryptominisat-build
 
 all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
 
@@ -21,7 +21,7 @@ bliss-0.73:
 	cd bliss-0.73 && make lib
 
 tools/pprsearch/pprsearch: bliss-0.73 cryptominisat-build/pycryptosat
-	cd tools/pprsearch && g++ -o pprsearch -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../${CMSATBUILD}/cmsat5-src/cryptominisat5 -I ../../bliss-0.73 -lboost_regex
+	cd tools/pprsearch && g++ -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../${CMSATBUILD}/cmsat5-src/cryptominisat5 -I ../../bliss-0.73 -lboost_regex
 
 tools/ppr2drat: tools/ppr2drat.c
 	cd tools && gcc -O2 -o ppr2drat ppr2drat.c
@@ -31,3 +31,12 @@ clean:
 
 depclean: clean
 	rm -rf ${CMSATBUILD} bliss-0.73*
+
+s3:
+	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 3 s3 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s3.drat 2>s3.dnf
+
+s4:
+	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 4 s4 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s4.drat 2>s4.dnf
+
+s6:
+	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 3 s6 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s6.drat 2>s6.dnf
