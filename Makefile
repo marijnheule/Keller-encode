@@ -1,4 +1,5 @@
 CMSATBUILD:=cryptominisat-build
+BOOST_ROOT:=/usr
 
 all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
 
@@ -21,7 +22,7 @@ bliss-0.73:
 	cd bliss-0.73 && make lib
 
 tools/pprsearch/pprsearch: bliss-0.73 cryptominisat-build/pycryptosat
-	cd tools/pprsearch && g++ -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../${CMSATBUILD}/cmsat5-src/cryptominisat5 -I ../../bliss-0.73 -lboost_regex
+	cd tools/pprsearch && g++ -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../${CMSATBUILD}/cmsat5-src/cryptominisat5 -I ../../bliss-0.73 -I${BOOST_ROOT}/include -L${BOOST_ROOT}/lib -lboost_regex
 
 tools/ppr2drat: tools/ppr2drat.c
 	cd tools && gcc -O2 -o ppr2drat ppr2drat.c
