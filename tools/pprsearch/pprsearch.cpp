@@ -46,11 +46,11 @@ int main(int argc, char** argv)
 
                 int lval = std::stoi(c);
 
-                proofParsed.push_back(CMSat::Lit(std::abs(lval), lval < 0));
+                proofParsed.push_back(Minisat::mkLit(std::abs(lval), lval < 0));
             }
 
             if (!proofParsed.empty() && (std::find(proofParsed.begin() + 1, proofParsed.end(), proofParsed.front()) != proofParsed.end())) {
-                CMSat::Lit separator = proofParsed.front();
+                Minisat::Lit separator = proofParsed.front();
                 SATFormula::clause_t prclause;
                 SATFormula::clause_t prwitness;
                 auto it = proofParsed.begin() + 1;
@@ -74,16 +74,16 @@ int main(int argc, char** argv)
                 proofParsed.push_back(proofParsed.front());
 
                 for (auto& i : permutation) {
-		    if (!i.first.sign() && (i.first != i.second)) {
+                    if (!Minisat::sign(i.first) && (i.first != i.second)) {
                         proofParsed.push_back(i.first);
                         proofParsed.push_back(i.second);
                     }
                 }
 
-                std::cout << proofParsed << " 0" << std::endl;
+                std::cout << proofParsed;
                 formula.addClause(prclause);
             } else {
-                std::cout << proofParsed << " 0" << std::endl;
+                std::cout << proofParsed;
                 formula.addClause(proofParsed);
             }
         }

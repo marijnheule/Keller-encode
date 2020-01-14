@@ -2,19 +2,18 @@
 
 #include "SATFormula.h"
 
-#include <functional>
 #include <iostream>
 
 SATFormula::clause_t negateClause(const SATFormula::clause_t & c)
 {
     SATFormula::clause_t negated(c.size());
 
-    std::transform(c.begin(), c.end(), negated.begin(), std::mem_fn(&CMSat::Lit::operator~));
+    std::transform(c.begin(), c.end(), negated.begin(), Minisat::operator~);
 
     return negated;
 }
 
-bool check_ppr(const SATFormula & formula, const SATFormula::clause_t & prclause, const SATFormula::clause_t & prwitness, const std::map<CMSat::Lit, CMSat::Lit> & p)
+bool check_ppr(const SATFormula & formula, const SATFormula::clause_t & prclause, const SATFormula::clause_t & prwitness, const std::map<Minisat::Lit, Minisat::Lit> & p)
 {
     SATFormula::clause_t alpha = negateClause(prclause);
     SATFormula falpha = formula;
@@ -39,15 +38,15 @@ bool check_ppr(const SATFormula & formula, const SATFormula::clause_t & prclause
     return true;
 }
 
-boost::bimap<CMSat::Lit, unsigned int> incidenceGraph(bliss::Graph & g, const SATFormula & f)
+boost::bimap<Minisat::Lit, unsigned int> incidenceGraph(bliss::Graph & g, const SATFormula & f)
 {
-    boost::bimap<CMSat::Lit, unsigned int>  lit2graph;
-    std::set<uint32_t> liveVars;
+    boost::bimap<Minisat::Lit, unsigned int>  lit2graph;
+    std::set<Minisat::Var> liveVars;
 
     // First pass: detect what vars are still alive
     for (auto & c : f.m_clauses) {
         for (auto & l : c) {
-	    liveVars.insert(l.var());
+            liveVars.insert(Minisat::var(l));
         }
     }
 
@@ -56,8 +55,8 @@ boost::bimap<CMSat::Lit, unsigned int> incidenceGraph(bliss::Graph & g, const SA
         auto posLitVertex = g.add_vertex(0);
         auto negLitVertex = g.add_vertex(0);
 
-        lit2graph.insert(boost::bimap<CMSat::Lit, unsigned int>::value_type(CMSat::Lit(v, false), posLitVertex));
-        lit2graph.insert(boost::bimap<CMSat::Lit, unsigned int>::value_type(CMSat::Lit(v, true), negLitVertex));
+        lit2graph.insert(boost::bimap<Minisat::Lit, unsigned int>::value_type(Minisat::mkLit(v, false), posLitVertex));
+        lit2graph.insert(boost::bimap<Minisat::Lit, unsigned int>::value_type(Minisat::mkLit(v, true), negLitVertex));
         g.add_edge(posLitVertex, negLitVertex);
     }
 
@@ -72,7 +71,7 @@ boost::bimap<CMSat::Lit, unsigned int> incidenceGraph(bliss::Graph & g, const SA
     return lit2graph;
 }
 
-bool isomorphism(const SATFormula& a, const SATFormula& b, std::map<CMSat::Lit, CMSat::Lit>& mapping)
+bool isomorphism(const SATFormula& a, const SATFormula& b, std::map<Minisat::Lit, Minisat::Lit>& mapping)
 {
     bliss::Graph galpha, gomega;
     bliss::Stats gstats;
@@ -105,7 +104,7 @@ bool isomorphism(const SATFormula& a, const SATFormula& b, std::map<CMSat::Lit, 
     return isomorphic;
 }
 
-std::map<CMSat::Lit, CMSat::Lit> search_permutation(const SATFormula & formula, const SATFormula::clause_t & prclause, const SATFormula::clause_t & prwitness)
+std::map<Minisat::Lit, Minisat::Lit> search_permutation(const SATFormula & formula, const SATFormula::clause_t & prclause, const SATFormula::clause_t & prwitness)
 {
     SATFormula::clause_t alpha = negateClause(prclause);
     SATFormula falpha = formula;
@@ -125,7 +124,7 @@ std::map<CMSat::Lit, CMSat::Lit> search_permutation(const SATFormula & formula, 
     std::cerr << "fomega[after simp] : " << fomega.m_clauses.size() << " clauses" << std::endl;
 
     // We need to search for a permutation
-    std::map<CMSat::Lit, CMSat::Lit> permutation;
+    std::map<Minisat::Lit, Minisat::Lit> permutation;
 
     std::cerr << "Checking isomorphism..." << std::endl;
 

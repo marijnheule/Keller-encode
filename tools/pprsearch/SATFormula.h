@@ -6,39 +6,42 @@
 #include <fstream>
 #include <map>
 
-#include <solvertypesmini.h>
+#include <minisat/core/SolverTypes.h>
 
 #include <boost/bimap.hpp>
+
+std::ostream & operator<<(std::ostream & out, Minisat::Lit l);
+std::ostream & operator<<(std::ostream & out, std::vector<Minisat::Lit> c);
 
 class SATFormula
 {
 public:
-    typedef std::vector<CMSat::Lit> clause_t;
+    typedef std::vector<Minisat::Lit> clause_t;
 
     enum UP { SAT, UNSAT, UNDEF };
 
     SATFormula();
     ~SATFormula();
 
-    bool addClause(CMSat::Lit a) {
+    bool addClause(Minisat::Lit a) {
         clause_t tmp = { a };
 
         return addClause(tmp);
     }
 
-    bool addClause(CMSat::Lit a, CMSat::Lit b) {
+    bool addClause(Minisat::Lit a, Minisat::Lit b) {
         clause_t tmp = { a, b };
 
         return addClause(tmp);
     }
 
-    bool addClause(CMSat::Lit a, CMSat::Lit b, CMSat::Lit c) {
+    bool addClause(Minisat::Lit a, Minisat::Lit b, Minisat::Lit c) {
         clause_t tmp = { a, b, c };
 
         return addClause(tmp);
     }
 
-    bool addClause(CMSat::Lit a, CMSat::Lit b, CMSat::Lit c, CMSat::Lit d) {
+    bool addClause(Minisat::Lit a, Minisat::Lit b, Minisat::Lit c, Minisat::Lit d) {
         clause_t tmp = { a, b, c, d };
 
         return addClause(tmp);
@@ -76,17 +79,17 @@ public:
 
     bool setCompare(const SATFormula & other);
 
-    void permute(const std::map<CMSat::Lit, CMSat::Lit> & perm);
+    void permute(const std::map<Minisat::Lit, Minisat::Lit> & perm);
 
     void simplify(const clause_t& assignment);
 
     UP unitPropagation(bool debug=false);
 
-    uint32_t m_nVars;
+    Minisat::Var m_nVars;
     std::vector<clause_t> m_clauses;
 
 private:
-    std::set<std::set<CMSat::Lit>> toSet() const;
+    std::set<std::set<Minisat::Lit>> toSet() const;
 };
 
 #endif // SATFORMULA_H

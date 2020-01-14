@@ -10,6 +10,18 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 
+std::ostream & operator<<(std::ostream & out, Minisat::Lit l) {
+    return (out << (Minisat::sign(l) ? "-" : "") << Minisat::var(l));
+}
+
+std::ostream & operator<<(std::ostream & out, std::vector<Minisat::Lit> c) {
+    for (auto l : c) {
+        out << l << " ";
+    }
+
+    return (out << 0 << std::endl);
+}
+
 SATFormula::SATFormula() : m_nVars(0)
 {
 }
@@ -18,10 +30,10 @@ SATFormula::~SATFormula()
 {
 }
 
-bool SATFormula::addClause(const std::vector<CMSat::Lit>& clause)
+bool SATFormula::addClause(const std::vector<Minisat::Lit>& clause)
 {
     for (auto l : clause) {
-        if (l.var() > m_nVars) {
+        if (Minisat::var(l) > m_nVars) {
             return false;
         }
     }
@@ -69,7 +81,7 @@ SATFormula SATFormula::fromDimacs(std::ifstream & file)
 
                 int lval = std::stoi(c);
 
-                clause.push_back(CMSat::Lit(std::abs(lval), lval < 0));
+                clause.push_back(Minisat::mkLit(std::abs(lval), lval < 0));
             }
 
             formula.addClause(clause);
@@ -95,7 +107,7 @@ bool SATFormula::setCompare(const SATFormula & other)
     return toSet() == other.toSet();
 }
 
-void SATFormula::permute(const std::map<CMSat::Lit, CMSat::Lit> & perm)
+void SATFormula::permute(const std::map<Minisat::Lit, Minisat::Lit> & perm)
 {
     for (auto && c : m_clauses) {
         for (size_t i = 0; i < c.size(); i++) {
@@ -127,9 +139,9 @@ void SATFormula::simplify(const clause_t& assignment)
 
 SATFormula::UP SATFormula::unitPropagation(bool debug)
 {
-    std::queue<CMSat::Lit> unitQueue;
-    std::vector<CMSat::Lit> assignment;
-    std::map<CMSat::Lit, std::vector<std::vector<clause_t>::iterator>> watches;
+    std::queue<Minisat::Lit> unitQueue;
+    std::vector<Minisat::Lit> assignment;
+    std::map<Minisat::Lit, std::vector<std::vector<clause_t>::iterator>> watches;
     bool foundEmpty = false;
 
     // First pass: populate the unitQueue and watches
@@ -208,7 +220,7 @@ SATFormula::UP SATFormula::unitPropagation(bool debug)
 
     // Cleanup satisfied clauses
     m_clauses.erase(std::remove_if(m_clauses.begin(), m_clauses.end(), [assignment](const clause_t& c) {
-        return std::any_of(c.begin(), c.end(), [assignment](CMSat::Lit l) {
+        return std::any_of(c.begin(), c.end(), [assignment](Minisat::Lit l) {
             return std::find(assignment.begin(), assignment.end(), l) != assignment.end();
         });
     }), m_clauses.end());
@@ -223,7 +235,7 @@ SATFormula::UP SATFormula::unitPropagation(bool debug)
             assert(std::find(c.begin(), c.end(), l) == c.end());
         }
 
-        c.erase(std::remove_if(c.begin(), c.end(), [assignment](CMSat::Lit l) {
+        c.erase(std::remove_if(c.begin(), c.end(), [assignment](Minisat::Lit l) {
             return std::find(assignment.begin(), assignment.end(), ~l) != assignment.end();
         }), c.end());
 
@@ -233,12 +245,12 @@ SATFormula::UP SATFormula::unitPropagation(bool debug)
     return UNDEF;
 }
 
-std::set<std::set<CMSat::Lit>> SATFormula::toSet() const
+std::set<std::set<Minisat::Lit>> SATFormula::toSet() const
 {
-    std::set<std::set<CMSat::Lit>> clauses;
+    std::set<std::set<Minisat::Lit>> clauses;
 
     for (auto & c : m_clauses) {
-        std::set<CMSat::Lit> literals;
+        std::set<Minisat::Lit> literals;
 
         for (auto & l : c) {
             literals.insert(l);
