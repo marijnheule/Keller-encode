@@ -1,7 +1,6 @@
-CMSATBUILD:=cryptominisat-build
 BOOST_ROOT:=/usr
 
-all: Keller-encode drat-trim/drat-trim tools/tautology cryptominisat-build/pycryptosat bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
+all: Keller-encode drat-trim/drat-trim tools/tautology bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
 
 Keller-encode: Keller-encode.c
 	gcc -O2 -Wall Keller-encode.c -oKeller-encode
@@ -11,10 +10,6 @@ drat-trim/drat-trim: drat-trim/drat-trim.c
 
 tools/tautology: tools/tautology.c
 	gcc -O2 -Wall tools/tautology.c -otools/tautology
-
-cryptominisat-build/pycryptosat:
-	mkdir -p ${CMSATBUILD}
-	cd ${CMSATBUILD} && cmake ${CMAKEARGS} ../cryptominisat && make python_interface
 
 bliss-0.73:
 	wget http://www.tcs.hut.fi/Software/bliss/bliss-0.73.zip
@@ -31,7 +26,7 @@ clean:
 	rm -f Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
 depclean: clean
-	rm -rf ${CMSATBUILD} bliss-0.73*
+	rm -rf bliss-0.73*
 
 s3:
 	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat >s3.drat 2>s3.dnf

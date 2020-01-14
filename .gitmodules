@@ -1,6 +1,3 @@
-[submodule "cryptominisat"]
-	path = cryptominisat
-	url = https://github.com/msoos/cryptominisat.git
 [submodule "minisat"]
 	path = minisat
 	url = https://github.com/niklasso/minisat.git
