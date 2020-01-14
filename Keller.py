@@ -238,7 +238,7 @@ if __name__ == "__main__":
         if not repeated:
             seen[(g, assignment)] = []
 
-    with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True) as pprsearch:
+    with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
         with subprocess.Popen([sys.argv[5], cnffilename, "-"], stdin=pprsearch.stdout, universal_newlines=True) as ppr2drat:
             # TODO assert this takes care of 3(s-1)^2s^4-3(s-1)^4s^2+(s-1)^6 cases
             # These explanations are RAT so we can output them straight up
