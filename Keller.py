@@ -5,8 +5,6 @@ import subprocess
 
 import igraph
 
-import pycryptosat
-
 table = {}
 
 def convert(w, i, c, n, s):
@@ -68,23 +66,6 @@ def parse_clause_line(l):
     del ints[-1]
 
     return ints
-
-def get_conflict_and_explanation(solver, n, s):
-    # Assume every conflict is about setting things to 1 or not 1
-    conflict = solver.get_conflict()
-    assert(len(conflict) == 2)
-    exp1 = -conflict[0]
-    exp2 = -conflict[1]
-    w1, i1, c1 = table[exp1]
-    w2, i2, c2 = table[exp2]
-
-    if c1 != 1:
-        exp1 = -convert(w1, i1, 1, 7, s)
-
-    if c2 != 1:
-        exp2 = -convert(w2, i2, 1, 7, s)
-
-    return tuple([-l for l in conflict]), tuple([exp1, exp2])
 
 def output_ippr(assignment, canonical, variables, s, outf):
     assert(len(assignment) == len(canonical))
@@ -148,11 +129,9 @@ if __name__ == "__main__":
     basename = sys.argv[2]
     cnffilename = "%s.cnf" % basename
     seen = []
-    eqclasses = {}
+    level1classes = {}
     ncnfs = 0
     conflicts = {}
-    explanations = {}
-    solver = pycryptosat.Solver()
     n = 7
     level1vars = [(3 + 2 ** (n - 3), 5), (3 + 2 ** (n - 3), 6),
                   (3 + 2 ** (n - 2), 4), (3 + 2 ** (n - 2), 6),
@@ -169,54 +148,31 @@ if __name__ == "__main__":
                 v = convert(i, j, k, n, s)
                 table[v] = (i, j, k)
 
-    with subprocess.Popen([sys.argv[3], "7", str(s)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as cnfgen6:
-        print(output, file=cnfgen6.stdin)
-        cnfgen6.stdin.close()
-
-        with open(cnffilename, 'w') as cnffile:
-            cnffile.write(cnfgen6.stdout.readline())
-
-            for l in cnfgen6.stdout:
-                clause = parse_clause_line(l)
-
-                cnffile.write(l)
-                solver.add_clause(clause)
+    with open(cnffilename, 'w') as cnffile:
+        with subprocess.Popen([sys.argv[3], "7", str(s)], stdin=subprocess.PIPE, stdout=cnffile, stderr=subprocess.DEVNULL, universal_newlines=True) as cnfgen6:
+            print(output, file=cnfgen6.stdin)
+            cnfgen6.stdin.close()
 
     for assignment in itertools.product(*[values] * len(level1vars)):
+        assert(len(level1vars) == 6)
+        if ((assignment[0] != 1) and (assignment[2] != 1)) or ((assignment[3] != 1) and (assignment[5] != 1)) or ((assignment[4] != 1) and (assignment[1] != 1)):
+            continue
+
         m, mcolor = matrix_graph(assignment, s)
         repeated = False
 
         for mm, ncolor, nass in seen:
             if mm.isomorphic_vf2(m, color1=ncolor, color2=mcolor):
                 repeated = True
-                eqclasses[nass].append(assignment)
+                level1classes[nass].append(assignment)
 
                 break
 
         if not repeated:
             seen.append((m, mcolor, assignment))
-            eqclasses[assignment] = []
+            level1classes[assignment] = []
 
-    level1classes = {}
-
-    for cls in eqclasses:
-        assumptions = [convert(level1vars[i][0], level1vars[i][1], cls[i], n, s) for i in range(0, len(cls))]
-        ret = solver.solve(assumptions=assumptions, confl_limit=1)[0]
-
-        if ret == False:
-            conflict, explanation = get_conflict_and_explanation(solver, n, s)
-
-            if conflict not in conflicts:
-                conflicts[conflict] = 1
-            else:
-                conflicts[conflict] += 1
-
-            if explanation not in explanations:
-                explanations[explanation] = 1
-            else:
-                explanations[explanation] += 1
-        elif ret == None:
-            level1classes[cls] = eqclasses[cls]
+    assert(sum([len(x) for x in level1classes.values()]) + len(level1classes) == pow(2 * s - 1, 3))
 
     seen = {}
     gcolor = [0] + [1] * (len(values) - 1)
@@ -240,10 +196,9 @@ if __name__ == "__main__":
 
     with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
         with subprocess.Popen([sys.argv[5], cnffilename, "-"], stdin=pprsearch.stdout, universal_newlines=True) as ppr2drat:
-            # TODO assert this takes care of 3(s-1)^2s^4-3(s-1)^4s^2+(s-1)^6 cases
-            # These explanations are RAT so we can output them straight up
-            for e in explanations:
-                print("%s 0" % " ".join([str(-i) for i in e]), file=pprsearch.stdin)
+            # These clauses are RAT so we can output them straight up
+            for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
+                print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=pprsearch.stdin)
 
             for cls1 in level1classes:
                 for a1 in level1classes[cls1]:

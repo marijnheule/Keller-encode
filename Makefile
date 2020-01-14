@@ -34,10 +34,10 @@ depclean: clean
 	rm -rf ${CMSATBUILD} bliss-0.73*
 
 s3:
-	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 3 s3 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s3.drat 2>s3.dnf
+	python3 Keller.py 3 s3 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s3.drat 2>s3.dnf
 
 s4:
-	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 4 s4 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s4.drat 2>s4.dnf
+	python3 Keller.py 4 s4 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s4.drat 2>s4.dnf
 
 s6:
-	PYTHONPATH=${CMSATBUILD}/pycryptosat LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMSATBUILD}/lib python3 Keller.py 3 s6 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s6.drat 2>s6.dnf
+	python3 Keller.py 3 s6 ./Keller-encode ../cppcode/pprsearch tools/ppr2drat >s6.drat 2>s6.dnf
