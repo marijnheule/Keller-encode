@@ -28,11 +28,59 @@ clean:
 depclean: clean
 	rm -rf bliss-0.73*
 
-s3:
-	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat >s3.drat 2>s3.dnf
+s3-python:
+	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat 2>s3.dnf
 
-s4:
-	python3 Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat >s4.drat 2>s4.dnf
+s3-drat-trim:
+	-drat-trim/drat-trim s3.cnf s3.drat -f
+	-for drat in $(shell ls -1 s3.*.drat); do \
+		cnffile="$$(basename $${drat} .drat).cnf"; \
+		echo $${cnffile}; \
+		drat-trim/drat-trim $${cnffile} $${drat} -f; \
+	done
 
-s6:
-	python3 Keller.py 3 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat >s6.drat 2>s6.dnf
+s3-tautology:
+	nvars="$$(head -1 s3.cnf | awk '{ print $$3 }')"; \
+	nclauses="$$(cat s3.dnf | wc -l)"; \
+	echo "p cnf $${nvars} $${nclauses}" > s3-tautology.cnf
+	sed 's/^a //' s3.dnf >> s3-tautology.cnf
+	tools/tautology s3-tautology.cnf
+	rm s3-tautology.cnf
+
+s3: s3-python s3-drat-trim s3-tautology
+
+s4-drat-trim:
+	-drat-trim/drat-trim s4.cnf s4.drat -f
+	-for drat in $(shell ls -1 s4.*.drat); do \
+		cnffile="$$(basename $${drat} .drat).cnf"; \
+		echo $${cnffile}; \
+		drat-trim/drat-trim $${cnffile} $${drat} -f; \
+	done
+
+s4-tautology:
+	nvars="$$(head -1 s4.cnf | awk '{ print $$3 }')"; \
+	nclauses="$$(cat s4.dnf | wc -l)"; \
+	echo "p cnf $${nvars} $${nclauses}" > s4-tautology.cnf
+	sed 's/^a //' s4.dnf >> s4-tautology.cnf
+	tools/tautology s4-tautology.cnf
+	rm s4-tautology.cnf
+
+s4: s4-python s4-drat-trim s4-tautology
+
+s6-drat-trim:
+	-drat-trim/drat-trim s6.cnf s6.drat -f
+	-for drat in $(shell ls -1 s6.*.drat); do \
+		cnffile="$$(basename $${drat} .drat).cnf"; \
+		echo $${cnffile}; \
+		drat-trim/drat-trim $${cnffile} $${drat} -f; \
+	done
+
+s6-tautology:
+	nvars="$$(head -1 s6.cnf | awk '{ print $$3 }')"; \
+	nclauses="$$(cat s6.dnf | wc -l)"; \
+	echo "p cnf $${nvars} $${nclauses}" > s6-tautology.cnf
+	sed 's/^a //' s6.dnf >> s6-tautology.cnf
+	tools/tautology s6-tautology.cnf
+	rm s6-tautology.cnf
+
+s6: s6-python s6-drat-trim s6-tautology
