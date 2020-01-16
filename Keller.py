@@ -1,5 +1,7 @@
 import sys
 import os
+import re
+import math
 import itertools
 import subprocess
 
@@ -67,6 +69,14 @@ def parse_clause_line(l):
 
     return ints
 
+def write_cnf(clauses, outf, nvars):
+    print("p cnf %d %d" % (nvars, len(clauses)), file=outf)
+
+    for l in clauses:
+        outf.write(l)
+
+    outf.flush()
+
 def output_ippr(assignment, canonical, variables, s, outf):
     assert(len(assignment) == len(canonical))
 
@@ -130,8 +140,7 @@ if __name__ == "__main__":
     cnffilename = "%s.cnf" % basename
     seen = []
     level1classes = {}
-    ncnfs = 0
-    conflicts = {}
+    ncnfs = 1
     n = 7
     level1vars = [(3 + 2 ** (n - 3), 5), (3 + 2 ** (n - 3), 6),
                   (3 + 2 ** (n - 2), 4), (3 + 2 ** (n - 2), 6),
@@ -194,21 +203,47 @@ if __name__ == "__main__":
         if not repeated:
             seen[(g, assignment)] = []
 
-    with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
-        with subprocess.Popen([sys.argv[5], cnffilename, "-"], stdin=pprsearch.stdout, universal_newlines=True) as ppr2drat:
-            # These clauses are RAT so we can output them straight up
-            for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
-                print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=pprsearch.stdin)
+    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(len(seen))))) + "d.%s"
+    nvars = None
+    currentclauses = []
 
-            for cls1 in level1classes:
-                for a1 in level1classes[cls1]:
-                    output_ippr(a1, cls1, level1vars, s, pprsearch.stdin)
+    with open(cnffilename, 'r') as origcnf:
+        m = re.match("p cnf (\d+) \d+", origcnf.readline().strip())
+        nvars = int(m.group(1))
 
-            for cls2 in seen:
-                for a2 in seen[cls2]:
-                    output_ippr(a2, cls2[1], level2vars, s, pprsearch.stdin)
+        for l in origcnf:
+            currentclauses.append(l)
 
-            pprsearch.stdin.close()
+    with open("%s.drat" % basename, 'w') as level1drat:
+        with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
+            with subprocess.Popen([sys.argv[5], cnffilename, "-"], stdin=pprsearch.stdout, stdout=level1drat, universal_newlines=True) as ppr2drat:
+                # These clauses are RAT so we can output them straight up
+                for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
+                    print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=pprsearch.stdin)
+                    currentclauses.append("%s 0\n" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]))
+
+                for cls1 in level1classes:
+                    for a1 in level1classes[cls1]:
+                        output_ippr(a1, cls1, level1vars, s, pprsearch.stdin)
+                        currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
+
+                pprsearch.stdin.close()
+
+    for cls2 in seen:
+        if len(seen[cls2]) > 0:
+            with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
+                write_cnf(currentclauses, currentcnf, nvars)
+
+                with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level2drat:
+                    with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
+                        with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level2drat, universal_newlines=True) as ppr2drat:
+                            for a2 in seen[cls2]:
+                                output_ippr(a2, cls2[1], level2vars, s, pprsearch.stdin)
+                                currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a2, level2vars, n, s)]))
+
+                            pprsearch.stdin.close()
+
+            ncnfs += 1
 
     for cls1 in level1classes:
         cls1vars = [convert(level1vars[i][0], level1vars[i][1], cls1[i], n, s) for i in range(0, len(cls1))]
