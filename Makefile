@@ -19,7 +19,7 @@ bliss-0.73:
 	unzip bliss-0.73.zip
 	cd bliss-0.73 && make lib
 
-tools/pprsearch/pprsearch: minisat/minisat bliss-0.73
+tools/pprsearch/pprsearch: minisat/minisat bliss-0.73 tools/pprsearch/pprsearch.cpp tools/pprsearch/pprtools.cpp tools/pprsearch/pprtools.h tools/pprsearch/SATFormula.cpp tools/pprsearch/SATFormula.h
 	cd tools/pprsearch && g++ -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../minisat -I ../../bliss-0.73 -I${BOOST_ROOT}/include -L${BOOST_ROOT}/lib -lboost_regex
 
 tools/ppr2drat: tools/ppr2drat.c
