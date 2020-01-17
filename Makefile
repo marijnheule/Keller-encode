@@ -49,6 +49,9 @@ s3-tautology:
 
 s3: s3-python s3-drat-trim s3-tautology
 
+s4-python:
+	python3 Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
+
 s4-drat-trim:
 	-drat-trim/drat-trim s4.cnf s4.drat -f
 	-for drat in $(shell ls -1 s4.*.drat); do \
@@ -66,6 +69,9 @@ s4-tautology:
 	rm s4-tautology.cnf
 
 s4: s4-python s4-drat-trim s4-tautology
+
+s6-python:
+	python3 Keller.py 6 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s6-drat-trim:
 	-drat-trim/drat-trim s6.cnf s6.drat -f
