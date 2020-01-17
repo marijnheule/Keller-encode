@@ -4,9 +4,9 @@
 #include <queue>
 #include <map>
 #include <iostream> // TODO delete
+#include <regex>
 #include <cassert>
 
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 
 std::ostream & operator<<(std::ostream & out, Minisat::Lit l) {
@@ -47,15 +47,15 @@ SATFormula SATFormula::fromDimacs(std::ifstream & file)
     SATFormula formula;
     size_t nclauses;
     std::string clauseLine;
-    boost::regex expression("^p\\s+cnf\\s+(\\d+)\\s+(\\d+)$");
-    boost::smatch m;
+    std::regex expression("^p\\s+cnf\\s+(\\d+)\\s+(\\d+)$");
+    std::smatch m;
 
     std::getline(file, clauseLine);
 
 #ifdef NDEBUG
-    boost::regex_match(clauseLine, m, expression);
+    std::regex_match(clauseLine, m, expression);
 #else
-    assert(boost::regex_match(clauseLine, m, expression));
+    assert(std::regex_match(clauseLine, m, expression));
 #endif //NDEBUG
 
     formula.m_nVars = std::stoi(m[1]);
