@@ -5,10 +5,9 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <set>
 
 #include <minisat/core/SolverTypes.h>
-
-#include <boost/bimap.hpp>
 
 std::ostream & operator<<(std::ostream & out, Minisat::Lit l);
 std::ostream & operator<<(std::ostream & out, std::vector<Minisat::Lit> c);

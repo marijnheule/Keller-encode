@@ -6,7 +6,6 @@
 #include <iostream> // TODO delete
 #include <cassert>
 
-#include <boost/bimap.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 

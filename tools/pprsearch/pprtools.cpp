@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include <boost/bimap.hpp>
+
 SATFormula::clause_t negateClause(const SATFormula::clause_t & c)
 {
     SATFormula::clause_t negated(c.size());

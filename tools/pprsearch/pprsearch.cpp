@@ -4,7 +4,6 @@
 #include <string>
 #include <fstream>
 
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 
 int main(int argc, char** argv)
