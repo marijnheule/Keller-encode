@@ -29,7 +29,7 @@ depclean: clean
 	rm -rf bliss-0.73*
 
 s3-python:
-	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat 2>s3.dnf
+	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s3-drat-trim:
 	-drat-trim/drat-trim s3.cnf s3.drat -f

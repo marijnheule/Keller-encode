@@ -253,4 +253,5 @@ if __name__ == "__main__":
 
             dnf.append(cls1vars + cls2vars)
 
-    print_assignments(sorted(dnf), 0, len(dnf), 0, [], sys.stderr)
+    with open("%s.dnf" % basename, 'w') as dnffile:
+        print_assignments(sorted(dnf), 0, len(dnf), 0, [], dnffile)
