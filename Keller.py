@@ -183,27 +183,6 @@ if __name__ == "__main__":
 
     assert(sum([len(x) for x in level1classes.values()]) + len(level1classes) == pow(2 * s - 1, 3))
 
-    seen = {}
-    gcolor = [0] + [1] * (2 * (len(values) - 1))
-
-    for l in range(0, len(level2vars) // 2):
-        gcolor += [2 + l] * 2
-
-    for assignment in itertools.product(*[values] * len(level2vars)):
-        repeated = False
-        g = level2_graph(assignment, s)
-
-        for cls in seen:
-            if g.isomorphic_vf2(cls[0], color1=gcolor, color2=gcolor):
-                seen[cls].append(assignment)
-                repeated = True
-
-                break
-
-        if not repeated:
-            seen[(g, assignment)] = []
-
-    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(len(seen))))) + "d.%s"
     nvars = None
     currentclauses = []
 
@@ -229,27 +208,56 @@ if __name__ == "__main__":
 
                 pprsearch.stdin.close()
 
-    for cls2 in seen:
-        if len(seen[cls2]) > 0:
-            with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
-                write_cnf(currentclauses, currentcnf, nvars)
+    # Level 2 symmetry breaking: coordinates 2 and 3 of w{3,19,35,67}
+    gcolor = [0] + [1] * (2 * (len(values) - 1))
+    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(len(seen))))) + "d.%s"
+    level2assignments = [[]]
 
-                with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level2drat:
-                    with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
-                        with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level2drat, universal_newlines=True) as ppr2drat:
-                            for a2 in seen[cls2]:
-                                output_ippr(a2, cls2[1], level2vars, s, pprsearch.stdin)
-                                currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a2, level2vars, n, s)]))
+    for l in range(0, len(level2vars) // 2):
+        seen = {}
+        gcolor += [2 + l, 2 + l]
 
-                            pprsearch.stdin.close()
+        while len(level2assignments[0]) == 2 * l:
+            for newassignment in itertools.product(values, values):
+                assignment = level2assignments[0] + list(newassignment)
+                g = level2_graph(assignment, s)
+                repeated = False
 
-            ncnfs += 1
+                for cls in seen:
+                    if g.isomorphic_vf2(cls[0], color1=gcolor, color2=gcolor):
+                        seen[cls].append(assignment)
+                        repeated = True
+
+                        break
+
+                if not repeated:
+                    seen[(g, tuple(assignment))] = []
+                    level2assignments.append(assignment)
+
+            del level2assignments[0]
+
+        for cls2 in seen:
+            if len(seen[cls2]) > 0:
+                with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
+                    write_cnf(currentclauses, currentcnf, nvars)
+
+                    with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level2drat:
+                        with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
+                            with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level2drat, universal_newlines=True) as ppr2drat:
+                                for a2 in seen[cls2]:
+                                    output_ippr(a2, cls2[1], level2vars, s, pprsearch.stdin)
+                                    currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a2, level2vars, n, s)]))
+
+                                pprsearch.stdin.close()
+                                assert(pprsearch.wait() == 0)
+
+                ncnfs += 1
 
     for cls1 in level1classes:
         cls1vars = [convert(level1vars[i][0], level1vars[i][1], cls1[i], n, s) for i in range(0, len(cls1))]
 
-        for cls2 in seen:
-            cls2vars = [convert(level2vars[i][0], level2vars[i][1], cls2[1][i], n, s) for i in range(0, len(cls2[1]))]
+        for cls2 in level2assignments:
+            cls2vars = [convert(level2vars[i][0], level2vars[i][1], cls2[i], n, s) for i in range(0, len(cls2))]
 
             dnf.append(cls1vars + cls2vars)
 
