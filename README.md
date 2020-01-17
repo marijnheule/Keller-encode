@@ -2,12 +2,6 @@
 Code related to Keller's conjecture
 
 ## Quick Start Guide
-In order to initialize the minisat git submodule run:
-
-```bash
-$ git submodule update --init
-```
-
 The wrapper Python script requires the `python-igraph` package, you
 can install it with
 

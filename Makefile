@@ -2,6 +2,9 @@ BOOST_ROOT:=/usr
 
 all: Keller-encode drat-trim/drat-trim tools/tautology bliss-0.73 tools/pprsearch/pprsearch tools/ppr2drat
 
+minisat/minisat:
+	git submodule update --init
+
 Keller-encode: Keller-encode.c
 	gcc -O2 -Wall Keller-encode.c -oKeller-encode
 
@@ -16,7 +19,7 @@ bliss-0.73:
 	unzip bliss-0.73.zip
 	cd bliss-0.73 && make lib
 
-tools/pprsearch/pprsearch: bliss-0.73
+tools/pprsearch/pprsearch: minisat/minisat bliss-0.73
 	cd tools/pprsearch && g++ -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../minisat -I ../../bliss-0.73 -I${BOOST_ROOT}/include -L${BOOST_ROOT}/lib -lboost_regex
 
 tools/ppr2drat: tools/ppr2drat.c
