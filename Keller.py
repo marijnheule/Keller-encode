@@ -37,15 +37,15 @@ def matrix_graph(assignment, s):
     return m, colors
 
 def level2_graph(assignment, s):
-    g = igraph.Graph(s + len(assignment))
+    g = igraph.Graph(2 * s - 1 + len(assignment))
 
     for i in range(0, len(assignment) // 2):
-        g.add_edge(s + 2 * i, assignment[2 * i])
-        g.add_edge(s + 2 * i + 1, assignment[2 * i + 1])
+        g.add_edge(2 * s + 2 * i - 1, assignment[2 * i])
+        g.add_edge(2 * s + 2 * i, s + assignment[2 * i + 1] - 1 if assignment[2 * i + 1] > 0 else 0)
 
     for i in range(0, (len(assignment) // 2) - 1):
-        g.add_edge(s + 2 * i, s + 2 * (i + 1))
-        g.add_edge(s + 2 * i + 1, s + 2 * (i + 1) + 1)
+        g.add_edge(2 * s + 2 * i - 1, 2 * s + 2 * (i + 1) - 1)
+        g.add_edge(2 * s + 2 * i, 2 * s + 2 * (i + 1))
 
     return g
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     assert(sum([len(x) for x in level1classes.values()]) + len(level1classes) == pow(2 * s - 1, 3))
 
     seen = {}
-    gcolor = [0] + [1] * (len(values) - 1)
+    gcolor = [0] + [1] * (2 * (len(values) - 1))
 
     for l in range(0, len(level2vars) // 2):
         gcolor += [2 + l] * 2
