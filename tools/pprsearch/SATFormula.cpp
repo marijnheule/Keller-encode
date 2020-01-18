@@ -5,9 +5,8 @@
 #include <map>
 #include <iostream> // TODO delete
 #include <regex>
+#include <sstream>
 #include <cassert>
-
-#include <boost/algorithm/string.hpp>
 
 std::ostream & operator<<(std::ostream & out, Minisat::Lit l) {
     return (out << (Minisat::sign(l) ? "-" : "") << Minisat::var(l));
@@ -66,24 +65,7 @@ SATFormula SATFormula::fromDimacs(std::ifstream & file)
         std::getline(file, clauseLine);
 
         if (!clauseLine.empty() && (clauseLine[0] != 'c')) {
-            std::vector<std::string> clauseVars;
-            clause_t clause;
-
-            boost::algorithm::split(clauseVars, clauseLine, boost::is_space());
-            assert(clauseVars.back() == "0");
-            clauseVars.pop_back();
-
-            for (auto c : clauseVars) {
-                if (c.length() == 0) {
-                    continue;
-                }
-
-                int lval = std::stoi(c);
-
-                clause.push_back(Minisat::mkLit(std::abs(lval), lval < 0));
-            }
-
-            formula.addClause(clause);
+            formula.addClause(parseClause(clauseLine));
         }
     }
 
@@ -259,4 +241,20 @@ std::set<std::set<Minisat::Lit>> SATFormula::toSet() const
     }
 
     return clauses;
+}
+
+SATFormula::clause_t parseClause(std::string clauseLine) {
+  std::stringstream clauseSplitter(clauseLine);
+  SATFormula::clause_t parsedClause;
+  int lval;
+
+  do {
+    clauseSplitter >> lval;
+
+    if (lval != 0) {
+      parsedClause.push_back(Minisat::mkLit(std::abs(lval), lval < 0));
+    }
+  } while(lval != 0);
+
+  return parsedClause;
 }

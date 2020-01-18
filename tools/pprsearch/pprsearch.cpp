@@ -3,8 +3,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-
-#include <boost/algorithm/string.hpp>
+#include <algorithm>
 
 int main(int argc, char** argv)
 {
@@ -29,24 +28,7 @@ int main(int argc, char** argv)
         std::getline(*ppr, proofLine);
 
         if (!proofLine.empty() && (proofLine[0] != 'c')) {
-            std::vector<std::string> proofVars;
-            SATFormula::clause_t proofParsed;
-            SATFormula::clause_t proofWitness;
-
-            boost::algorithm::split(proofVars, proofLine, boost::is_space());
-
-            assert(proofVars.back() == "0");
-            proofVars.pop_back();
-
-            for (auto c : proofVars) {
-                if (c.length() == 0) {
-                    continue;
-                }
-
-                int lval = std::stoi(c);
-
-                proofParsed.push_back(Minisat::mkLit(std::abs(lval), lval < 0));
-            }
+            SATFormula::clause_t proofParsed = parseClause(proofLine);
 
             if (!proofParsed.empty() && (std::find(proofParsed.begin() + 1, proofParsed.end(), proofParsed.front()) != proofParsed.end())) {
                 Minisat::Lit separator = proofParsed.front();

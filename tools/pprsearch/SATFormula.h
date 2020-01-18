@@ -91,4 +91,6 @@ private:
     std::set<std::set<Minisat::Lit>> toSet() const;
 };
 
+SATFormula::clause_t parseClause(std::string clauseLine);
+
 #endif // SATFORMULA_H
