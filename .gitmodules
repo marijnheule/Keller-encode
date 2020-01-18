@@ -10,3 +10,6 @@
 [submodule "algorithm"]
 	path = algorithm
 	url = https://github.com/boostorg/algorithm.git
+[submodule "mpl"]
+	path = mpl
+	url = https://github.com/boostorg/mpl.git

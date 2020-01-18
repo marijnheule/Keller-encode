@@ -6,7 +6,10 @@ minisat/minisat:
 config/include:
 	git submodule update --init config
 
-algorithm/include:
+mpl/include:
+	git submodule update --init mpl
+
+algorithm/include: mpl/include
 	git submodule update --init algorithm
 
 bimap/include: config/include
