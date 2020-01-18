@@ -1,3 +1,5 @@
+BOOST_ROOT:=/usr
+
 all: Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
 minisat/minisat:
@@ -24,7 +26,7 @@ bliss-0.73:
 	cd bliss-0.73 && make lib
 
 tools/pprsearch/pprsearch: minisat/minisat bimap/include bliss-0.73 tools/pprsearch/pprsearch.cpp tools/pprsearch/pprtools.cpp tools/pprsearch/pprtools.h tools/pprsearch/SATFormula.cpp tools/pprsearch/SATFormula.h
-	cd tools/pprsearch && g++ -std=c++11 -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../minisat -I ../../bliss-0.73 -I ../../bimap/include -I ../../config/include
+	cd tools/pprsearch && g++ -std=c++11 -o pprsearch -DNDEBUG -O2 pprsearch.cpp pprtools.cpp SATFormula.cpp ../../bliss-0.73/libbliss.a -I ../../minisat -I ../../bliss-0.73 -I${BOOST_ROOT}/include
 
 tools/ppr2drat: tools/ppr2drat.c
 	cd tools && gcc -O2 -o ppr2drat ppr2drat.c
