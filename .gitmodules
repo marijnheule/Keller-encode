@@ -4,3 +4,9 @@
 [submodule "bimap"]
 	path = bimap
 	url = https://github.com/boostorg/bimap.git
+[submodule "config"]
+	path = config
+	url = https://github.com/boostorg/config.git
+[submodule "algorithm"]
+	path = algorithm
+	url = https://github.com/boostorg/algorithm.git
