@@ -167,6 +167,10 @@ if __name__ == "__main__":
         if ((assignment[0] != 1) and (assignment[2] != 1)) or ((assignment[3] != 1) and (assignment[5] != 1)) or ((assignment[4] != 1) and (assignment[1] != 1)):
             continue
 
+        # Force c_{19,6} to be 1
+        if assignment[1] != 1:
+            continue
+
         m, mcolor = matrix_graph(assignment, s)
         repeated = False
 
@@ -180,8 +184,6 @@ if __name__ == "__main__":
         if not repeated:
             seen.append((m, mcolor, assignment))
             level1classes[assignment] = []
-
-    assert(sum([len(x) for x in level1classes.values()]) + len(level1classes) == pow(2 * s - 1, 3))
 
     nvars = None
     currentclauses = []
@@ -200,6 +202,10 @@ if __name__ == "__main__":
                 for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
                     print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=pprsearch.stdin)
                     currentclauses.append("%s 0\n" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]))
+
+                # Force c_{19,6} to be 1
+                print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=pprsearch.stdin)
+                currentclauses.append("%d %d 0\n" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)))
 
                 for cls1 in level1classes:
                     for a1 in level1classes[cls1]:
