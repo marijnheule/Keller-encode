@@ -3,7 +3,7 @@ BOOST_ROOT:=/usr
 all: Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
 minisat/minisat:
-	git submodule update --init
+	git submodule update --init minisat
 
 bimap/include:
 	git submodule update --init bimap
