@@ -213,6 +213,7 @@ if __name__ == "__main__":
                         currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
 
                 pprsearch.stdin.close()
+                assert(pprsearch.wait() == 0)
 
     # Level 2 symmetry breaking: coordinates 2 and 3 of w{3,19,35,67}
     gcolor = [0] + [1] * (2 * (len(values) - 1))
