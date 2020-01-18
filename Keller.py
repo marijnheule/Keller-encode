@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     # Level 2 symmetry breaking: coordinates 2 and 3 of w{3,19,35,67}
     gcolor = [0] + [1] * (2 * (len(values) - 1))
-    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(len(seen))))) + "d.%s"
+    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(s ** 8)))) + "d.%s"
     level2assignments = [[]]
 
     for l in range(0, len(level2vars) // 2):
