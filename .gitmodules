@@ -1,9 +1,3 @@
 [submodule "minisat"]
 	path = minisat
 	url = https://github.com/niklasso/minisat.git
-[submodule "bimap"]
-	path = bimap
-	url = https://github.com/boostorg/bimap.git
-[submodule "config"]
-	path = config
-	url = https://github.com/boostorg/config.git
