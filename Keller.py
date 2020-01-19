@@ -18,21 +18,37 @@ def convert(w, i, c, n, s):
 def matrix_graph(assignment, s):
     nrows = 3
     ncols = 3
-    nsymbols = s + 1
-    m = igraph.Graph(nrows + ncols + nrows * ncols + nsymbols)
-    colors = [0] * nrows + [1] * ncols + [2] * (nrows * ncols) + [3 + i for i in range(0, nsymbols)]
+    m = igraph.Graph(nrows + ncols + nrows * ncols + ncols * (s - 2) + 3)
+    colors = [0] * nrows + [1] * ncols + [2] * (nrows * ncols) + [3] * (ncols * (s - 2))
     expanded = list(assignment)
 
+    colors.append(3 + ncols) # 0
+    colors.append(4 + ncols) # 1
+    colors.append(5 + ncols) # s + 1
+
     for r in range(0, nrows):
-        expanded.insert(r * ncols + r, s)
+        expanded.insert(r * ncols + r, s + 1)
 
     assert(len(expanded) == nrows * ncols)
 
+    for c in range(0, ncols):
+        for i in range(0, s - 2):
+            for j in range(i + 1, s - 2):
+                m.add_edge(nrows + ncols + nrows * ncols + c * (s -2) + i, nrows + ncols + nrows * ncols + c * (s -2) + j)
+
     for r in range(0, nrows):
         for c in range(0, ncols):
+            v = expanded[r * ncols + c]
+
             m.add_edge(nrows + ncols + r * ncols + c, r)
             m.add_edge(nrows + ncols + r * ncols + c, nrows + c)
-            m.add_edge(nrows + ncols + r * ncols + c, nrows + ncols + nrows * ncols + expanded[r * ncols + c])
+
+            if v in [0, 1]:
+                m.add_edge(nrows + ncols + r * ncols + c, nrows + ncols + nrows * ncols + ncols * (s - 2) + v)
+            elif v == s + 1:
+                m.add_edge(nrows + ncols + r * ncols + c, nrows + ncols + nrows * ncols + ncols * (s - 2) + 2)
+            else:
+                m.add_edge(nrows + ncols + r * ncols + c, nrows + ncols + nrows * ncols + c * (s - 2) + (v - 2))
 
     return m, colors
 
