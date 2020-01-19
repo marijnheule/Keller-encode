@@ -154,6 +154,7 @@ if __name__ == "__main__":
 """ % (s, s, s, s + 1)
     basename = sys.argv[2]
     cnffilename = "%s.cnf" % basename
+    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(s ** 8)))) + "d.%s"
     seen = []
     level1classes = {}
     ncnfs = 1
@@ -222,18 +223,28 @@ if __name__ == "__main__":
                 # Force c_{19,6} to be 1
                 print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=pprsearch.stdin)
                 currentclauses.append("%d %d 0\n" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)))
-
-                for cls1 in level1classes:
-                    for a1 in level1classes[cls1]:
-                        output_ippr(a1, cls1, level1vars, s, pprsearch.stdin)
-                        currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
-
                 pprsearch.stdin.close()
                 assert(pprsearch.wait() == 0)
 
+    for cls1 in level1classes:
+        if len(level1classes[cls1]) > 0:
+            with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
+                write_cnf(currentclauses, currentcnf, nvars)
+
+                with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level1drat:
+                    with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
+                        with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level1drat, universal_newlines=True) as ppr2drat:
+                            for a1 in level1classes[cls1]:
+                                output_ippr(a1, cls1, level1vars, s, pprsearch.stdin)
+                                currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
+
+                            pprsearch.stdin.close()
+                            assert(pprsearch.wait() == 0)
+
+            ncnfs += 1
+
     # Level 2 symmetry breaking: coordinates 2 and 3 of w{3,19,35,67}
     gcolor = [0] + [1] * (2 * (len(values) - 1))
-    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(s ** 8)))) + "d.%s"
     level2assignments = [[]]
 
     for l in range(0, len(level2vars) // 2):
