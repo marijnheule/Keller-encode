@@ -43,10 +43,7 @@ s3-drat-trim:
 	done
 
 s3-tautology:
-	nvars="$$(head -1 s3.cnf | awk '{ print $$3 }')"; \
-	nclauses="$$(cat s3.dnf | wc -l)"; \
-	echo "p cnf $${nvars} $${nclauses}" > s3-tautology.cnf
-	sed 's/^a //' s3.dnf >> s3-tautology.cnf
+	tools/dnf2cnf.sh s3.dnf > s3-tautology.cnf
 	tools/tautology s3-tautology.cnf
 	rm s3-tautology.cnf
 
@@ -64,10 +61,7 @@ s4-drat-trim:
 	done
 
 s4-tautology:
-	nvars="$$(head -1 s4.cnf | awk '{ print $$3 }')"; \
-	nclauses="$$(cat s4.dnf | wc -l)"; \
-	echo "p cnf $${nvars} $${nclauses}" > s4-tautology.cnf
-	sed 's/^a //' s4.dnf >> s4-tautology.cnf
+	tools/dnf2cnf.sh s4.dnf > s4-tautology.cnf
 	tools/tautology s4-tautology.cnf
 	rm s4-tautology.cnf
 
@@ -85,10 +79,7 @@ s6-drat-trim:
 	done
 
 s6-tautology:
-	nvars="$$(head -1 s6.cnf | awk '{ print $$3 }')"; \
-	nclauses="$$(cat s6.dnf | wc -l)"; \
-	echo "p cnf $${nvars} $${nclauses}" > s6-tautology.cnf
-	sed 's/^a //' s6.dnf >> s6-tautology.cnf
+	tools/dnf2cnf.sh s6.dnf > s6-tautology.cnf
 	tools/tautology s6-tautology.cnf
 	rm s6-tautology.cnf
 
