@@ -157,7 +157,7 @@ if __name__ == "__main__":
     fmtstr = "%s.%0" + str(int(math.ceil(math.log10(s ** 8)))) + "d.%s"
     seen = []
     level1classes = {}
-    ncnfs = 1
+    ncnfs = 0
     n = 7
     level1vars = [(3 + 2 ** (n - 3), 5), (3 + 2 ** (n - 3), 6),
                   (3 + 2 ** (n - 2), 4), (3 + 2 ** (n - 2), 6),
