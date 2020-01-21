@@ -113,7 +113,7 @@ def write_cnf(clauses, outf, nvars):
 
     outf.flush()
 
-def output_ippr(assignment, canonical, variables, n, s, outf):
+def output_ippr(assignment, canonical, variables, n, s, outf, condition=[]):
     assert(len(assignment) == len(canonical))
 
     for diff in range(0, len(assignment)):
@@ -132,6 +132,9 @@ def output_ippr(assignment, canonical, variables, n, s, outf):
 
     del cube[s * diff + i]
     del clause[s * diff + i]
+
+    clause += condition
+    cube += condition
 
     print("%d %s %d %s 0" % (firstlit, " ".join([str(-v) for v in clause]), firstlit, " ".join([str(v) for v in cube])), file=outf)
 
