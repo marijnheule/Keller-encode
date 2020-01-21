@@ -1,6 +1,7 @@
 CC:=gcc
 CXX:=g++
 BOOST_ROOT:=/usr
+PYTHON:=python3.7
 
 all: Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
@@ -31,7 +32,7 @@ depclean: clean
 	rm -rf bliss-0.73*
 
 s3-python:
-	python3 Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
+	${PYTHON} Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s3-drat-trim:
 	-drat-trim/drat-trim s3.cnf s3.drat -f
@@ -49,7 +50,7 @@ s3-tautology:
 s3: s3-python s3-drat-trim s3-tautology
 
 s4-python:
-	python3 Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
+	${PYTHON} Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s4-drat-trim:
 	-drat-trim/drat-trim s4.cnf s4.drat -f
@@ -67,7 +68,7 @@ s4-tautology:
 s4: s4-python s4-drat-trim s4-tautology
 
 s6-python:
-	python3 Keller.py 6 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
+	${PYTHON} Keller.py 6 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s6-drat-trim:
 	-drat-trim/drat-trim s6.cnf s6.drat -f
