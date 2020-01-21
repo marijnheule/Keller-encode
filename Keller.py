@@ -4,6 +4,7 @@ import re
 import math
 import itertools
 import subprocess
+import collections
 
 import igraph
 
@@ -64,6 +65,25 @@ def level2_graph(assignment, s):
         g.add_edge(2 * s + 2 * i, 2 * s + 2 * (i + 1))
 
     return g
+
+def shift_right_families(values, k):
+    alltuples = set()
+    families = {}
+
+    for a in itertools.product(*[values] * k):
+        if a not in alltuples:
+            d = collections.deque(a)
+            localclass = set()
+
+            for i in range(0, len(a)):
+                d.rotate()
+                localclass.add(tuple(d))
+                alltuples.add(tuple(d))
+
+            localclass.remove(a)
+            families[a] = list(localclass)
+
+    return families
 
 def assignment2vars(a, ws, n, s):
     result = []
