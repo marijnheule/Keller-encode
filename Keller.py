@@ -93,7 +93,7 @@ def write_cnf(clauses, outf, nvars):
 
     outf.flush()
 
-def output_ippr(assignment, canonical, variables, s, outf):
+def output_ippr(assignment, canonical, variables, n, s, outf):
     assert(len(assignment) == len(canonical))
 
     for diff in range(0, len(assignment)):
@@ -235,7 +235,7 @@ if __name__ == "__main__":
                     with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
                         with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level1drat, universal_newlines=True) as ppr2drat:
                             for a1 in level1classes[cls1]:
-                                output_ippr(a1, cls1, level1vars, s, pprsearch.stdin)
+                                output_ippr(a1, cls1, level1vars, n, s, pprsearch.stdin)
                                 currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
 
                             pprsearch.stdin.close()
@@ -279,7 +279,7 @@ if __name__ == "__main__":
                         with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
                             with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level2drat, universal_newlines=True) as ppr2drat:
                                 for a2 in seen[cls2]:
-                                    output_ippr(a2, cls2[1], level2vars, s, pprsearch.stdin)
+                                    output_ippr(a2, cls2[1], level2vars, n, s, pprsearch.stdin)
                                     currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a2, level2vars, n, s)]))
 
                                 pprsearch.stdin.close()
