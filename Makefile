@@ -1,7 +1,7 @@
-CC:=gcc
+CC:=gccA
 CXX:=g++
 BOOST_ROOT:=/usr
-PYTHON:=python3.7
+PYTHON:=python3
 
 all: Keller-encode drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
