@@ -1,4 +1,4 @@
-CC:=gccA
+CC:=gcc
 CXX:=g++
 BOOST_ROOT:=/usr
 PYTHON:=python3
