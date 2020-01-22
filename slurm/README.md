@@ -17,7 +17,7 @@ will generate these files.
 If needed, this can be run in the cluster environment with
 
 ```bash
-$ slurm/s-python.sh 3
+$ sbatch <sbatch-arguments> slurm/s-python.sh 3
 ```
 
 After this step is complete, parallel verification can be done with
