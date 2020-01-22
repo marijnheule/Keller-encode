@@ -190,6 +190,12 @@ if __name__ == "__main__":
                   (3 + 2 ** (n - 2), 2), (3 + 2 ** (n - 2), 3),
                   (3 + 2 ** (n - 1), 2), (3 + 2 ** (n - 1), 3)]
     dnf = []
+    # Problematic case for s>3
+    problematic = [0, 1, 1, 0, 0, 1]
+    assert(len(problematic) == len(level1vars))
+    problematicvars = [convert(level1vars[i][0], level1vars[i][1], problematic[i], n, s) for i in range(0, len(level1vars))] + [convert(l2v[0], l2v[1], 0, n, s) for l2v in level2vars]
+    srclasses = shift_right_families(list(range(0, 3)), 3)
+    w2coordinates = [(2, 4), (2, 5), (2, 6)]
 
     for i in range(0, 2 ** n):
         for j in range(0, n):
@@ -246,6 +252,30 @@ if __name__ == "__main__":
                 # Force c_{19,6} to be 1
                 print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=pprsearch.stdin)
                 currentclauses.append("%d %d 0\n" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)))
+
+                # Problematic case for s > 3
+                # Sort coordinates 2 and 3 of w2
+                print("%d %d %s %d %d %s 0" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars]), convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
+                currentclauses.append("%d %d %s 0\n" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars])))
+
+                # All values greater than 1 in the 2nd and 3rd coordinates of w2 can be mapped to 1
+                for i in (2, 3):
+                    for j in range(2, s):
+                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 1, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
+                        currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
+
+                # All values greater than 2 in the last coordinates of w2 can be mapped to 2
+                for i in range(4, n):
+                    for j in range(3, s):
+                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 2, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
+                        currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
+
+                # Break symmetries in the last 3 coordinates of w2
+                for srclass in srclasses:
+                    for blockedassignment in srclasses[srclass]:
+                        output_ippr(blockedassignment, srclass, w2coordinates, n, s, pprsearch.stdin, condition=problematicvars)
+                        currentclauses.append("%s %s 0\n" % (" ".join([str(-v) for v in assignment2vars(blockedassignment, w2coordinates, n, s)]), " ".join([str(-l) for l in problematicvars])))
+
                 pprsearch.stdin.close()
                 assert(pprsearch.wait() == 0)
 
@@ -318,5 +348,20 @@ if __name__ == "__main__":
 
             dnf.append(cls1vars + cls2vars)
 
+    dnf = sorted(dnf)
+    problematicdnf = []
+
+    assert(dnf[0] == problematicvars)
+
+    for w2first2 in ((0, 0), (0, 1), (1, 1)):
+        w2first2vars = [convert(2, 2, w2first2[0], n, s), convert(2, 3, w2first2[1], n, s)]
+
+        for w2next3  in srclasses:
+            w2next3vars = [convert(2, 4 + i, w2next3[i], n, s) for i in range(0, len(w2next3))]
+
+            problematicdnf.append(w2first2vars + w2next3vars)
+
     with open("%s.dnf" % basename, 'w') as dnffile:
-        print_assignments(sorted(dnf), 0, len(dnf), 0, [], dnffile)
+        print_assignments(sorted(problematicdnf), 0, len(problematicdnf), 0, [[v] for v in dnf[0]], dnffile)
+        del dnf[0]
+        print_assignments(dnf, 0, len(dnf), 0, [], dnffile)
