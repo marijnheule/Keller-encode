@@ -241,37 +241,47 @@ if __name__ == "__main__":
         for l in origcnf:
             currentclauses.append(l)
 
-    with open("%s.ippr" % basename, 'w') as level1ippr:
+    with open("%s.ippr" % basename, 'w') as initialippr:
                 # These clauses are RAT so we can output them straight up
                 for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
-                    print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=level1ippr)
+                    print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=initialippr)
                     currentclauses.append("%s 0\n" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]))
 
                 # Force c_{19,6} to be 1
-                print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=level1ippr)
+                print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=initialippr)
                 currentclauses.append("%d %d 0\n" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)))
 
+    with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
+        write_cnf(currentclauses, currentcnf, nvars)
+
+        with open(fmtstr % (basename, ncnfs, "ippr"), 'w') as problematicippr:
                 # Problematic case for s > 3
                 # Sort coordinates 2 and 3 of w2
-                print("%d %d %s %d %d %s 0" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars]), convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(l) for l in problematicvars])), file=level1ippr)
+                print("%d %d %s %d %d %s 0" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars]), convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(l) for l in problematicvars])), file=problematicippr)
                 currentclauses.append("%d %d %s 0\n" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars])))
 
                 # All values greater than 1 in the 2nd and 3rd coordinates of w2 can be mapped to 1
                 for i in (2, 3):
                     for j in range(2, s):
-                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 1, n, s), " ".join([str(l) for l in problematicvars])), file=level1ippr)
+                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 1, n, s), " ".join([str(l) for l in problematicvars])), file=problematicippr)
                         currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
 
                 # All values greater than 2 in the last coordinates of w2 can be mapped to 2
                 for i in range(4, n):
                     for j in range(3, s):
-                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 2, n, s), " ".join([str(l) for l in problematicvars])), file=level1ippr)
+                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 2, n, s), " ".join([str(l) for l in problematicvars])), file=problematicippr)
                         currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
 
-                # Break symmetries in the last 3 coordinates of w2
-                for srclass in srclasses:
+
+    # Break symmetries in the last 3 coordinates of w2
+    for srclass in srclasses:
+        if len(srclasses[srclass]) > 0:
+            with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
+                write_cnf(currentclauses, currentcnf, nvars)
+
+                with open(fmtstr % (basename, ncnfs, "ippr"), 'w') as srclassippr:
                     for blockedassignment in srclasses[srclass]:
-                        output_ippr(blockedassignment, srclass, w2coordinates, n, s, level1ippr, condition=problematicvars)
+                        output_ippr(blockedassignment, srclass, w2coordinates, n, s, srclassippr, condition=problematicvars)
                         currentclauses.append("%s %s 0\n" % (" ".join([str(-v) for v in assignment2vars(blockedassignment, w2coordinates, n, s)]), " ".join([str(-l) for l in problematicvars])))
 
     for cls1 in level1classes:
