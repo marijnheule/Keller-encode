@@ -272,6 +272,7 @@ if __name__ == "__main__":
                         print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 2, n, s), " ".join([str(l) for l in problematicvars])), file=problematicippr)
                         currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
 
+    ncnfs += 1
 
     # Break symmetries in the last 3 coordinates of w2
     for srclass in srclasses:
@@ -283,6 +284,8 @@ if __name__ == "__main__":
                     for blockedassignment in srclasses[srclass]:
                         output_ippr(blockedassignment, srclass, w2coordinates, n, s, srclassippr, condition=problematicvars)
                         currentclauses.append("%s %s 0\n" % (" ".join([str(-v) for v in assignment2vars(blockedassignment, w2coordinates, n, s)]), " ".join([str(-l) for l in problematicvars])))
+
+            ncnfs += 1
 
     for cls1 in level1classes:
         if len(level1classes[cls1]) > 0:
