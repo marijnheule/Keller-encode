@@ -138,16 +138,9 @@ def output_ippr(assignment, canonical, variables, n, s, outf, condition=[]):
 
     print("%d %s %d %s 0" % (firstlit, " ".join([str(-v) for v in clause]), firstlit, " ".join([str(v) for v in cube])), file=outf)
 
-def print_assignments(dnf, i1, i2, j, trails, outf):
+def tautological_assignments(dnf, i1, i2, j, trails, tautology):
     if j >= len(dnf[i1]):
-        outf.write("a ")
-
-        for t in trails:
-            if len(t) > 0:
-                outf.write(" ".join([str(l) for l in t]))
-                outf.write(" ")
-
-        outf.write("0\n")
+        tautology.append(list(itertools.chain.from_iterable(trails)))
 
         return
 
@@ -155,7 +148,7 @@ def print_assignments(dnf, i1, i2, j, trails, outf):
 
     for i in range(i1, i2):
         if dnf[i][j] not in trail:
-            print_assignments(dnf, i1, i, j + 1, trails + [trail], outf)
+            tautological_assignments(dnf, i1, i, j + 1, trails + [trail], tautology)
 
             i1 = i
             trail[-1] = -trail[-1]
@@ -163,7 +156,7 @@ def print_assignments(dnf, i1, i2, j, trails, outf):
             trail.append(dnf[i][j])
 
     del trail[-1]
-    print_assignments(dnf, i1, i2, j + 1, trails + [trail], outf)
+    tautological_assignments(dnf, i1, i2, j + 1, trails + [trail], tautology)
 
 if __name__ == "__main__":
     s = int(sys.argv[1])
@@ -350,6 +343,8 @@ if __name__ == "__main__":
 
     dnf = sorted(dnf)
     problematicdnf = []
+    tautology = []
+    subtautology = []
 
     assert(dnf[0] == problematicvars)
 
@@ -361,7 +356,12 @@ if __name__ == "__main__":
 
             problematicdnf.append(w2first2vars + w2next3vars)
 
+    tautological_assignments(dnf, 0, len(dnf), 0, [], tautology)
+    tautological_assignments(problematicdnf, 0, len(problematicdnf), 0, [tautology[0]], subtautology)
+
     with open("%s.dnf" % basename, 'w') as dnffile:
-        print_assignments(sorted(problematicdnf), 0, len(problematicdnf), 0, [[v] for v in dnf[0]], dnffile)
-        del dnf[0]
-        print_assignments(dnf, 0, len(dnf), 0, [], dnffile)
+        for t in subtautology:
+            print("a %s 0" % " ".join([str(l) for l in t]), file=dnffile)
+
+        for t in tautology[1:]:
+            print("a %s 0" % " ".join([str(l) for l in t]), file=dnffile)
