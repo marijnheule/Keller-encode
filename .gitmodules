@@ -1,0 +1,3 @@
+[submodule "tools/drat-trim"]
+	path = tools/drat-trim
+	url = https://github.com/marijnheule/drat-trim.git
