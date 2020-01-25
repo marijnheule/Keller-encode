@@ -10,6 +10,91 @@ import igraph
 
 table = {}
 
+class KellerOutputManager:
+    def __init__(self, upper_bound, clauses, nvars, pprsearch, ppr2drat):
+        self.fmtstr = "%s.%0" + str(upper_bound) + "d"
+        self.clauses = clauses
+        self.nvars = nvars
+        self.noutputs = {}
+        self.pprsearch = pprsearch
+        self.ppr2drat = ppr2drat
+
+    def new_output(self, label):
+        if label in self.noutputs:
+            self.noutputs[label] += 1
+        else:
+            self.noutputs[label] = 0
+
+        return self.fmtstr % (label, self.noutputs[label])
+
+class KellerOutput:
+    def __init__(self, manager, label):
+        self.manager = manager
+        self.label = self.manager.new_output(label)
+        self.outfile = None
+
+    def __enter__(self):
+        self.write_cnf()
+
+        if self.manager.pprsearch is None:
+            self.outfile = open("%s.ippr" % self.label, 'w')
+        elif self.manager.ppr2drat is None:
+            self.outfile = open("%s.ppr" % self.label, 'w')
+        else:
+            self.outfile = open("%s.drat" % self.label, 'w')
+
+        if self.manager.pprsearch is not None:
+            self.pprsearch = subprocess.Popen([self.manager.pprsearch, "%s.cnf" % self.label],
+                                              stdout=subprocess.PIPE if self.manager.ppr2drat is not None else self.outfile,
+                                              stdin=subprocess.PIPE,
+                                              stderr=subprocess.DEVNULL,
+                                              universal_newlines=True)
+
+            if self.manager.ppr2drat is not None:
+                self.ppr2drat = subprocess.Popen([self.manager.ppr2drat, "%s.cnf" % self.label, "-"],
+                                                 stdin=self.pprsearch.stdout,
+                                                 stdout=self.outfile,
+                                                 universal_newlines=True)
+
+            self.infile = self.pprsearch.stdin
+        else:
+            self.infile = self.outfile
+
+        return self
+
+    def write_cnf(self):
+        with open("%s.cnf" % self.label, 'w') as cnffile:
+            print("p cnf %d %d" % (self.manager.nvars, len(self.manager.clauses)), file=cnffile)
+
+            for l in self.manager.clauses:
+                cnffile.write(l)
+
+    def __exit__(self, extype, exvalue, tb):
+        if self.manager.pprsearch is not None:
+            self.pprsearch.stdin.close()
+
+        if self.manager.ppr2drat is not None:
+            assert(self.ppr2drat.wait() == 0)
+            self.ppr2drat.__exit__(extype, exvalue, tb)
+
+        if self.manager.pprsearch is not None:
+            assert(self.pprsearch.wait() == 0)
+            self.pprsearch.__exit__(extype, exvalue, tb)
+
+        self.outfile.__exit__(extype, exvalue, tb)
+
+    def add_rat(self, clause):
+        clause_line = "%s 0" % " ".join([str(l) for l in clause])
+        
+        print(clause_line, file=self.infile)
+        self.manager.clauses.append("%s\n" % clause_line)
+
+    def add_ippr(self, clause, cube):
+        clause_line = "%s 0" % " ".join([str(l) for l in clause])
+
+        print("%s %s 0" % (clause_line, " ".join([str(l) for l in cube])), file=self.infile)
+        self.manager.clauses.append("%s\n" % clause_line)
+
 def convert(w, i, c, n, s):
     assert(w >= 0 and w < (2**n))
     assert(i >= 0 and i < n)
@@ -105,15 +190,7 @@ def parse_clause_line(l):
 
     return ints
 
-def write_cnf(clauses, outf, nvars):
-    print("p cnf %d %d" % (nvars, len(clauses)), file=outf)
-
-    for l in clauses:
-        outf.write(l)
-
-    outf.flush()
-
-def output_ippr(assignment, canonical, variables, n, s, outf, condition=[]):
+def ippr_clause_and_cube(assignment, canonical, variables, n, s, condition=[]):
     assert(len(assignment) == len(canonical))
 
     for diff in range(0, len(assignment)):
@@ -126,17 +203,17 @@ def output_ippr(assignment, canonical, variables, n, s, outf, condition=[]):
 
     for i in range(0, s):
         if clause[s * diff + i] == -cube[s * diff + i]:
-            firstlit = cube[s * diff + i]
-
             break
 
-    del cube[s * diff + i]
-    del clause[s * diff + i]
-
+    assert(i < s)
+    clause.insert(0, clause[s * diff + i])
+    del clause[s * diff + i + 1]
     clause += condition
+    cube.insert(0, cube[s * diff + i])
+    del cube[s * diff + i + 1]
     cube += condition
 
-    print("%d %s %d %s 0" % (firstlit, " ".join([str(-v) for v in clause]), firstlit, " ".join([str(v) for v in cube])), file=outf)
+    return ([-l for l in clause], cube)
 
 def tautological_assignments(dnf, i1, i2, j, trails, tautology):
     if j >= len(dnf[i1]):
@@ -160,6 +237,9 @@ def tautological_assignments(dnf, i1, i2, j, trails, tautology):
 
 if __name__ == "__main__":
     s = int(sys.argv[1])
+    basename = sys.argv[2]
+    pprsearch_binary = None if len(sys.argv) < 5 else sys.argv[4]
+    ppr2drat_binary = None if len(sys.argv) < 6 else sys.argv[5]
     values = list(range(0, s))
     output = """
 7 %d
@@ -168,9 +248,6 @@ if __name__ == "__main__":
 %d 1 0 0 0 0 0
 %d %d -1 -1 1 1 1
 """ % (s, s, s, s + 1)
-    basename = sys.argv[2]
-    cnffilename = "%s.cnf" % basename
-    fmtstr = "%s.%0" + str(int(math.ceil(math.log10(s ** 8)))) + "d.%s"
     seen = []
     level1classes = {}
     ncnfs = 0
@@ -182,6 +259,8 @@ if __name__ == "__main__":
                   (3 + 2 ** (n - 3), 2), (3 + 2 ** (n - 3), 3),
                   (3 + 2 ** (n - 2), 2), (3 + 2 ** (n - 2), 3),
                   (3 + 2 ** (n - 1), 2), (3 + 2 ** (n - 1), 3)]
+    nvars = None
+    currentclauses = []
     dnf = []
     # Problematic case for s>3
     problematic = [0, 1, 1, 0, 0, 1]
@@ -196,10 +275,14 @@ if __name__ == "__main__":
                 v = convert(i, j, k, n, s)
                 table[v] = (i, j, k)
 
-    with open(cnffilename, 'w') as cnffile:
-        with subprocess.Popen([sys.argv[3], "7", str(s)], stdin=subprocess.PIPE, stdout=cnffile, stderr=subprocess.DEVNULL, universal_newlines=True) as cnfgen6:
-            print(output, file=cnfgen6.stdin)
-            cnfgen6.stdin.close()
+    with subprocess.Popen([sys.argv[3], "7", str(s)], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as KellerEncode:
+        m = re.match("p cnf (\d+) \d+", KellerEncode.stdout.readline().strip())
+        nvars = int(m.group(1))
+
+        for l in KellerEncode.stdout:
+            currentclauses.append(l)
+
+    output_manager = KellerOutputManager(int(math.ceil(math.log10(s ** 8))), currentclauses, nvars, pprsearch_binary, ppr2drat_binary)
 
     for assignment in itertools.product(*[values] * len(level1vars)):
         assert(len(level1vars) == 6)
@@ -224,68 +307,47 @@ if __name__ == "__main__":
             seen.append((m, mcolor, assignment))
             level1classes[assignment] = []
 
-    nvars = None
-    currentclauses = []
+    with KellerOutput(output_manager, basename) as current_output:
+        # These clauses are RAT so we can output them straight up
+        for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
+            current_output.add_rat([convert(i[0], i[1], 1, n, s) for i in e])
 
-    with open(cnffilename, 'r') as origcnf:
-        m = re.match("p cnf (\d+) \d+", origcnf.readline().strip())
-        nvars = int(m.group(1))
+        # Force c_{19,6} to be 1
+        current_output.add_ippr([convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)], [convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)])
 
-        for l in origcnf:
-            currentclauses.append(l)
+    # Problematic case for s > 3
+    with KellerOutput(output_manager, basename) as current_output:
+        negproblematicvars = [-l for l in problematicvars]
 
-    with open("%s.drat" % basename, 'w') as level1drat:
-        with subprocess.Popen([sys.argv[4], cnffilename], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
-            with subprocess.Popen([sys.argv[5], cnffilename, "-"], stdin=pprsearch.stdout, stdout=level1drat, universal_newlines=True) as ppr2drat:
-                # These clauses are RAT so we can output them straight up
-                for e in [((19, 5), (35, 4)), ((35, 6), (67, 5)), ((67, 4), (19, 6))]:
-                    print("%s 0" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]), file=pprsearch.stdin)
-                    currentclauses.append("%s 0\n" % " ".join([str(convert(i[0], i[1], 1, n, s)) for i in e]))
+        # Sort coordinates 2 and 3 of w2
+        current_output.add_ippr([convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s)] + negproblematicvars, [convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s)] + problematicvars)
 
-                # Force c_{19,6} to be 1
-                print("%d %d %d %d 0" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s), convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)), file=pprsearch.stdin)
-                currentclauses.append("%d %d 0\n" % (convert(level1vars[1][0], level1vars[1][1], 1, n, s), -convert(level1vars[4][0], level1vars[4][1], 1, n, s)))
+        # All values greater than 1 in the 2nd and 3rd coordinates of w2 can be mapped to 1
+        for i in (2, 3):
+            for j in range(2, s):
+                current_output.add_ippr([-convert(2, i, j, n, s), convert(2, i, j - 1, n, s)] + negproblematicvars, [-convert(2, i, j, n, s), convert(2, i, 1, n, s)] + problematicvars)
 
-                # Problematic case for s > 3
-                # Sort coordinates 2 and 3 of w2
-                print("%d %d %s %d %d %s 0" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars]), convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
-                currentclauses.append("%d %d %s 0\n" % (convert(2, 2, 0, n, s), -convert(2, 3, 0, n, s), " ".join([str(-l) for l in problematicvars])))
+        # All values greater than 2 in the last coordinates of w2 can be mapped to 2
+        for i in range(4, n):
+            for j in range(3, s):
+                current_output.add_ippr([-convert(2, i, j, n, s), convert(2, i, j - 1, n, s)] + negproblematicvars, [-convert(2, i, j, n, s), convert(2, i, 2, n, s)] + problematicvars)
 
-                # All values greater than 1 in the 2nd and 3rd coordinates of w2 can be mapped to 1
-                for i in (2, 3):
-                    for j in range(2, s):
-                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 1, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
-                        currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
+    # Break symmetries in the last 3 coordinates of w2
+    for srclass in srclasses:
+        if len(srclasses[srclass]) > 0:
+            with KellerOutput(output_manager, basename) as current_output:
+                for blockedassignment in srclasses[srclass]:
+                    clause, cube = ippr_clause_and_cube(blockedassignment, srclass, w2coordinates, n, s, condition=problematicvars)
 
-                # All values greater than 2 in the last coordinates of w2 can be mapped to 2
-                for i in range(4, n):
-                    for j in range(3, s):
-                        print("%d %d %s %d %d %s 0" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars]), -convert(2, i, j, n, s), convert(2, i, 2, n, s), " ".join([str(l) for l in problematicvars])), file=pprsearch.stdin)
-                        currentclauses.append("%d %d %s 0\n" % (-convert(2, i, j, n, s), convert(2, i, j - 1, n, s), " ".join([str(-l) for l in problematicvars])))
-
-                # Break symmetries in the last 3 coordinates of w2
-                for srclass in srclasses:
-                    for blockedassignment in srclasses[srclass]:
-                        output_ippr(blockedassignment, srclass, w2coordinates, n, s, pprsearch.stdin, condition=problematicvars)
-                        currentclauses.append("%s %s 0\n" % (" ".join([str(-v) for v in assignment2vars(blockedassignment, w2coordinates, n, s)]), " ".join([str(-l) for l in problematicvars])))
-
-                pprsearch.stdin.close()
-                assert(pprsearch.wait() == 0)
+                    current_output.add_ippr(clause, cube)
 
     for cls1 in level1classes:
         if len(level1classes[cls1]) > 0:
-            with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
-                write_cnf(currentclauses, currentcnf, nvars)
+            with KellerOutput(output_manager, basename) as current_output:
+                for a1 in level1classes[cls1]:
+                    clause, cube = ippr_clause_and_cube(a1, cls1, level1vars, n, s)
 
-                with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level1drat:
-                    with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
-                        with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level1drat, universal_newlines=True) as ppr2drat:
-                            for a1 in level1classes[cls1]:
-                                output_ippr(a1, cls1, level1vars, n, s, pprsearch.stdin)
-                                currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a1, level1vars, n, s)]))
-
-                            pprsearch.stdin.close()
-                            assert(pprsearch.wait() == 0)
+                    current_output.add_ippr(clause, cube)
 
             ncnfs += 1
 
@@ -318,19 +380,12 @@ if __name__ == "__main__":
 
         for cls2 in seen:
             if len(seen[cls2]) > 0:
-                with open(fmtstr % (basename, ncnfs, "cnf"), 'w') as currentcnf:
-                    write_cnf(currentclauses, currentcnf, nvars)
+                with KellerOutput(output_manager, basename) as current_output:
+                    for a2 in seen[cls2]:
+                        clause, cube = ippr_clause_and_cube(a2, cls2[1], level2vars, n, s)
 
-                    with open(fmtstr % (basename, ncnfs, "drat"), 'w') as level2drat:
-                        with subprocess.Popen([sys.argv[4], currentcnf.name], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as pprsearch:
-                            with subprocess.Popen([sys.argv[5], currentcnf.name, "-"], stdin=pprsearch.stdout, stdout=level2drat, universal_newlines=True) as ppr2drat:
-                                for a2 in seen[cls2]:
-                                    output_ippr(a2, cls2[1], level2vars, n, s, pprsearch.stdin)
-                                    currentclauses.append("%s 0\n" % " ".join([str(-v) for v in assignment2vars(a2, level2vars, n, s)]))
-
-                                pprsearch.stdin.close()
-                                assert(pprsearch.wait() == 0)
-
+                        current_output.add_ippr(clause, cube)
+    
                 ncnfs += 1
 
     for cls1 in level1classes:

@@ -38,7 +38,6 @@ s3-python:
 	${PYTHON} Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s3-drat-trim:
-	tools/drat-trim/drat-trim s3.cnf s3.drat -f
 	for drat in $(shell ls -1 s3.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
@@ -56,7 +55,6 @@ s4-python:
 	${PYTHON} Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s4-drat-trim:
-	tools/drat-trim/drat-trim s4.cnf s4.drat -f
 	for drat in $(shell ls -1 s4.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
@@ -74,7 +72,6 @@ s6-python:
 	${PYTHON} Keller.py 6 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
 s6-drat-trim:
-	tools/drat-trim/drat-trim s6.cnf s6.drat -f
 	for drat in $(shell ls -1 s6.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
