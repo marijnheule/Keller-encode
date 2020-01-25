@@ -239,13 +239,6 @@ if __name__ == "__main__":
     pprsearch_binary = None if len(sys.argv) < 5 else sys.argv[4]
     ppr2drat_binary = None if len(sys.argv) < 6 else sys.argv[5]
     values = list(range(0, s))
-    output = """
-7 %d
-3
-0 0 0 0 0 0 0
-%d 1 0 0 0 0 0
-%d %d -1 -1 1 1 1
-""" % (s, s, s, s + 1)
     seen = []
     level1classes = {}
     ncnfs = 0
