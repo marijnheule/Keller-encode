@@ -34,51 +34,51 @@ clean:
 depclean: clean
 	rm -rf bliss-0.73*
 
-s3-python:
+s3-python: Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 	${PYTHON} Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
-s3-drat-trim:
+s3-drat-trim: tools/drat-trim/drat-trim
 	for drat in $(shell ls -1 s3.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
 		tools/drat-trim/drat-trim $${cnffile} $${drat} -f; \
 	done
 
-s3-tautology:
+s3-tautology: tools/tautology
 	tools/dnf2cnf.sh s3.dnf > s3-tautology.cnf
 	tools/tautology s3-tautology.cnf
 	rm s3-tautology.cnf
 
 s3: s3-python s3-drat-trim s3-tautology
 
-s4-python:
+s4-python: Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 	${PYTHON} Keller.py 4 s4 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
-s4-drat-trim:
+s4-drat-trim: tools/drat-trim/drat-trim
 	for drat in $(shell ls -1 s4.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
 		tools/drat-trim/drat-trim $${cnffile} $${drat} -f; \
 	done
 
-s4-tautology:
+s4-tautology: tools/tautology
 	tools/dnf2cnf.sh s4.dnf > s4-tautology.cnf
 	tools/tautology s4-tautology.cnf
 	rm s4-tautology.cnf
 
 s4: s4-python s4-drat-trim s4-tautology
 
-s6-python:
+s6-python: Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 	${PYTHON} Keller.py 6 s6 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 
-s6-drat-trim:
+s6-drat-trim: tools/drat-trim/drat-trim
 	for drat in $(shell ls -1 s6.*.drat); do \
 		cnffile="$$(basename $${drat} .drat).cnf"; \
 		echo $${cnffile}; \
 		tools/drat-trim/drat-trim $${cnffile} $${drat} -f; \
 	done
 
-s6-tautology:
+s6-tautology: tools/tautology
 	tools/dnf2cnf.sh s6.dnf > s6-tautology.cnf
 	tools/tautology s6-tautology.cnf
 	rm s6-tautology.cnf
