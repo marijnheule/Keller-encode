@@ -8,8 +8,6 @@ import collections
 
 import igraph
 
-table = {}
-
 class KellerOutputManager:
     def __init__(self, upper_bound, clauses, nvars, pprsearch, ppr2drat):
         self.fmtstr = "%s.%0" + str(upper_bound) + "d"
@@ -268,12 +266,6 @@ if __name__ == "__main__":
     problematicvars = [convert(level1vars[i][0], level1vars[i][1], problematic[i], n, s) for i in range(0, len(level1vars))] + [convert(l2v[0], l2v[1], 0, n, s) for l2v in level2vars]
     srclasses = shift_right_families(list(range(0, 3)), 3)
     w2coordinates = [(2, 4), (2, 5), (2, 6)]
-
-    for i in range(0, 2 ** n):
-        for j in range(0, n):
-            for k in range(0, s):
-                v = convert(i, j, k, n, s)
-                table[v] = (i, j, k)
 
     with subprocess.Popen([sys.argv[3], "7", str(s)], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True) as KellerEncode:
         m = re.match("p cnf (\d+) \d+", KellerEncode.stdout.readline().strip())
