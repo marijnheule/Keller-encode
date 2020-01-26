@@ -5,8 +5,6 @@
 
 #define SBP
 
-#define DIM8
-
 /* N is the dimension, S is the number of different shifts (modulo 1) */
 /* In the paper, N = 7 and S = {3,4,6} */
 int N, S;
@@ -82,26 +80,6 @@ void sym_break() {
     if (N > 4) units[nunit++] = convert(3, N-3, 1);
 }
 
-void dim_eight() {
-  FILE *dim8 = fopen("8dim.txt", "r");
-  int perm[8] = {5, 6, 1, 2, 4, 0, 3, 7};
-  for (int a = 0; a < 256; a++) {
-    int cubes[8];
-    int i = 0;
-    for (int b = 0; b < 8; b++) {
-      fscanf(dim8, "%d", &cubes[b]);
-      if(cubes[b] % 2 == 1 && (b == 6 || b == 3 || b == 0)) cubes[b] ^= 2; 
-    }
-    for (int b = 0; b < 8; b++) {
-      i += (cubes[perm[b]] / 2) * (1 << b);
-    }
-    for (int b = 0; b < 8; b++) {
-      units[nunit++] = convert(i, b, cubes[perm[b]] % 2);
-    }
-  }
-  fclose(dim8);
-}
-
 int main (int argc, char** argv) {
   if (argc < 3) {
     printf ("Keller encode requires two arguments: N and S\n"); exit (0); }
@@ -119,11 +97,6 @@ int main (int argc, char** argv) {
 
 #ifdef SBP
   sym_break();
-#endif
-
-#ifdef DIM8
-  if (N == 8)
-    dim_eight();
 #endif
 
   printf ("p cnf %i %i\n", nVars, nCls + nunit);
