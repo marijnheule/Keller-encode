@@ -25,6 +25,13 @@ class KellerOutputManager:
 
         return self.fmtstr % (label, self.noutputs[label])
 
+    def write_cnf(self, filename):
+        with open(filename, 'w') as cnffile:
+            print("p cnf %d %d" % (self.nvars, len(self.clauses)), file=cnffile)
+
+            for l in self.clauses:
+                cnffile.write(l)
+
 class KellerOutput:
     def __init__(self, manager, label):
         self.manager = manager
@@ -32,7 +39,7 @@ class KellerOutput:
         self.outfile = None
 
     def __enter__(self):
-        self.write_cnf()
+        self.manager.write_cnf("%s.cnf" % self.label)
 
         if self.manager.pprsearch is None:
             self.outfile = open("%s.ippr" % self.label, 'w')
@@ -59,13 +66,6 @@ class KellerOutput:
             self.infile = self.outfile
 
         return self
-
-    def write_cnf(self):
-        with open("%s.cnf" % self.label, 'w') as cnffile:
-            print("p cnf %d %d" % (self.manager.nvars, len(self.manager.clauses)), file=cnffile)
-
-            for l in self.manager.clauses:
-                cnffile.write(l)
 
     def __exit__(self, extype, exvalue, tb):
         if self.manager.pprsearch is not None:
@@ -372,6 +372,9 @@ if __name__ == "__main__":
                         current_output.add_ippr(clause, cube)
     
                 ncnfs += 1
+
+    # Write the final CNF
+    output_manager.write_cnf("%s.cnf" % basename)
 
     for cls1 in level1classes:
         cls1vars = [convert(level1vars[i][0], level1vars[i][1], cls1[i], n, s) for i in range(0, len(cls1))]
