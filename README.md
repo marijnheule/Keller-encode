@@ -55,5 +55,5 @@ $ make acl2-checker LISP=ccl
 You can test this installation with the provided examples:
 
 ```bash
-$ acl2-8.2/books/projects/sat/lrat/cube/cube-check/run.sh examples/<example>.cnf examples/<example>.clrat examples/<example>-out.cnf
+$ acl2-8.2/books/projects/sat/lrat/cube/run.sh examples/<example>.cnf examples/<example>.clrat examples/<example>-out.cnf
 ```
