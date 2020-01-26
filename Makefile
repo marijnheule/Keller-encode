@@ -40,7 +40,7 @@ acl2-8.2/saved_acl2: acl2-8.2
 acl2-cert: acl2-8.2/saved_acl2
 	cd acl2-8.2 && books/build/cert.pl --acl2 ${ACL2} books/projects/sat/lrat/cube/*.lisp
 
-acl2-8.2/books/projects/sat/lrat/cube/cube-check: acl2-cert
+acl2-checker: acl2-cert
 	cd acl2-8.2/books/projects/sat/lrat/cube/ && echo "(include-book \"run\")\
 :q\
 (save-exec \"cube-check\" \"Executable including run.lisp\")" | ${ACL2}

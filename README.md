@@ -42,14 +42,14 @@ Targets are provided for getting the sources, certifying the checker
 and building a binary for it:
 
 ```bash
-$ make acl2-8.2/books/projects/sat/lrat/cube/cube-check
+$ make acl2-checker
 ```
 
 The default Common Lisp implementation is sbcl. You can specify your
 own implementation:
 
 ```bash
-$ make acl2-8.2/books/projects/sat/lrat/cube/cube-check LISP=ccl
+$ make acl2-checker LISP=ccl
 ```
 
 You can test this installation with the provided examples:
