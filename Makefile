@@ -2,6 +2,8 @@ CC:=gcc
 CXX:=g++
 BOOST_ROOT:=/usr
 PYTHON:=python3
+LISP=sbcl
+ACL2="$(shell pwd)/acl2-8.2/saved_acl2"
 
 all: Keller-encode tools/drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
@@ -28,11 +30,26 @@ tools/pprsearch/pprsearch: bliss-0.73 tools/pprsearch/pprsearch.cpp tools/pprsea
 tools/ppr2drat: tools/ppr2drat.c
 	cd tools && ${CC} -O2 -o ppr2drat ppr2drat.c
 
+acl2-8.2:
+	wget https://github.com/acl2/acl2/archive/8.2.tar.gz
+	tar xzf 8.2.tar.gz
+
+acl2-8.2/saved_acl2: acl2-8.2
+	cd acl2-8.2 && make LISP=${LISP}
+
+acl2-cert: acl2-8.2/saved_acl2
+	cd acl2-8.2 && books/build/cert.pl --acl2 ${ACL2} books/projects/sat/lrat/cube/*.lisp
+
+acl2-checker: acl2-cert
+	cd acl2-8.2/books/projects/sat/lrat/cube/ && echo "(include-book \"run\")\
+:q\
+(save-exec \"cube-check\" \"Executable including run.lisp\")" | ${ACL2}
+
 clean:
 	rm -f Keller-encode tools/drat-trim/drat-trim tools/tautology tools/pprsearch/pprsearch tools/ppr2drat
 
 depclean: clean
-	rm -rf bliss-0.73*
+	rm -rf bliss-0.73* acl2-8.2 8.2.tar.gz
 
 s3-python: Keller-encode tools/pprsearch/pprsearch tools/ppr2drat
 	${PYTHON} Keller.py 3 s3 ./Keller-encode tools/pprsearch/pprsearch tools/ppr2drat

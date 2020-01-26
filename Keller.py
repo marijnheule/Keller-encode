@@ -88,10 +88,10 @@ class KellerOutput:
         self.manager.clauses.append("%s\n" % clause_line)
 
     def add_ippr(self, clause, cube):
-        clause_line = "%s 0" % " ".join([str(l) for l in clause])
+        clause_line = "%s" % " ".join([str(l) for l in clause])
 
         print("%s %s 0" % (clause_line, " ".join([str(l) for l in cube])), file=self.infile)
-        self.manager.clauses.append("%s\n" % clause_line)
+        self.manager.clauses.append("%s 0\n" % clause_line)
 
 def convert(w, i, c, n, s):
     assert(w >= 0 and w < (2**n))
